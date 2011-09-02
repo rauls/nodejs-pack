@@ -1,0 +1,10 @@
+This is a copy of PHP's pack function made into a nodejs module.
+Its a 100% clone with no new features or changed features, yet.
+
+The only speed issue is that doing a Buffer::New() takes a long time.
+
+I will add a feature where we can populate an existing Buffer, so the caller can
+worry about Buffer management. This will be done as the first paramater. The feature
+is there, but it doesnt work yet because of some type casting errors going from an
+arg[n] v8:Object to v8:Buffer or node::Buffer, once thats fixed its good.
+
