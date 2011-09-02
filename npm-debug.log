@@ -1,0 +1,48 @@
+info it worked if it ends with ok
+verbose cli [ 'node', '/usr/bin/npm', '-g', 'install', 'node-waf' ]
+info using npm@1.0.23
+info using node@v0.4.10
+verbose /usr/bin/node node symlink
+verbose config file /root/.npmrc
+verbose config file /usr/etc/npmrc
+silly exec /usr/bin/node "/usr/lib/node_modules/npm/bin/npm-get-uid-gid.js" "nobody" 0
+silly output from getuid/gid {"uid":99,"gid":0}
+silly output from getuid/gid 
+verbose into /usr/lib [ 'node-waf' ]
+verbose cache add node-waf
+verbose cache add [ 'node-waf', null ]
+verbose parsed url { pathname: 'node-waf', href: 'node-waf' }
+info addNamed [ 'node-waf', '' ]
+verbose addNamed [ null, '' ]
+verbose GET node-waf
+verbose raw, before any munging node-waf
+verbose url resolving [ 'http://registry.npmjs.org/', './node-waf' ]
+verbose url resolved http://registry.npmjs.org/node-waf
+verbose url parsed { protocol: 'http:',
+verbose url parsed   slashes: true,
+verbose url parsed   host: 'registry.npmjs.org',
+verbose url parsed   hostname: 'registry.npmjs.org',
+verbose url parsed   href: 'http://registry.npmjs.org/node-waf',
+verbose url parsed   pathname: '/node-waf' }
+verbose response http://registry.npmjs.org/node-waf
+silly chunk {"error":"not_found","reason":"document not found"}
+silly chunk 
+silly get cb [ 404,
+silly get cb   { server: 'CouchDB/1.1.0 (Erlang OTP/R14B03)',
+silly get cb     date: 'Tue, 30 Aug 2011 04:52:40 GMT',
+silly get cb     'content-type': 'application/json',
+silly get cb     'content-length': '52',
+silly get cb     'cache-control': 'must-revalidate',
+silly get cb     'x-cache': 'MISS from fsfw01.dev.variant.com.au',
+silly get cb     'x-cache-lookup': 'MISS from fsfw01.dev.variant.com.au:3128',
+silly get cb     connection: 'close' } ]
+ERR! 404 'node-waf' is not in the npm registry.
+ERR! 404 You should bug the author to publish it.
+ERR! 404 Note that you can also install from a tarball or folder.
+ERR! 
+ERR! System Linux 2.6.32-131.0.15.el6.x86_64
+ERR! command "node" "/usr/bin/npm" "-g" "install" "node-waf"
+ERR! cwd /FMS/lib/packsrc
+ERR! node -v v0.4.10
+ERR! npm -v 1.0.23
+verbose exit [ 1, true ]
