@@ -1,15 +1,31 @@
+BIN = ./node_modules/.bin
+MOCHA_OPTS = --timeout 10s --recursive
+REPORTER = spec
+TEST_FILES = test/acceptance
+
 all:
 	#$(MAKE) static
-	node-waf configure build
+	node-gyp configure build
 
 clean:
 	rm -rf build
 
+lint:
+	$(BIN)/jshint hipack.js test/*
+	
 temp:
-	rm -rf tmp/pack
-	mkdir -p tmp/pack
-	cp -r README *.{cc,h,js*} wscript Makefile deps test tmp/pack
-	cd tmp/pack && rm -rf deps/*/.git* deps/*/*.o deps/pack/libpack.*
+	rm -rf tmp/hipack
+	mkdir -p tmp/hipack
+	cp -r README *.{cc,h,js*} wscript Makefile deps test tmp/hipack
+	cd tmp/hipack && rm -rf deps/*/.git* deps/*/*.o deps/hipack/libhipack.*
 
-package: temp
-	cd tmp && tar -czvf pack.tgz pack
+test:
+	node test/test.js
+	
+install: lint
+	@npm install
+
+package: temp install
+	cd tmp && tar -czvf hipack.tgz hipack
+	@npm hipack
+

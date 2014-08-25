@@ -1,5 +1,7 @@
+#include <v8.h>
 
 #include <node.h>
+#include <node_object_wrap.h>
 #include <node_buffer.h>
 
 #include <stdio.h>
@@ -84,13 +86,9 @@ size_t BufferLength(v8::Local<v8::Object> buf_obj) {
     return node::Buffer::Length(buf_obj);
 }
 
-
-
-
-static int debug_mode = 0;
-
+static int debug_mode;
 /* Whether machine is little endian */
-char machine_little_endian;
+static char machine_little_endian;
 
 /* Mapping of byte from char (8bit) to long for machine endian */
 static int byte_map[1];
@@ -108,6 +106,20 @@ static int machine_endian_long_map[4];
 static int big_endian_long_map[4];
 static int little_endian_long_map[4];
 
+
+class HiPack : public ObjectWrap {
+	public:
+	static void SetDebug(int n) { debug_mode = n; }
+	static int IsDebug() { return debug_mode; }
+
+	static Handle<Value> New(const Arguments& args) {
+    	HandleScope scope;
+
+        HiPack* hipack = new HiPack();
+        hipack->Wrap(args.This());
+
+        return args.This();
+    }
 /* {{{ NODEJS_pack
  */
 static void NODEJS_pack(int32_t val, int size, int *map, char *output)
@@ -137,12 +149,12 @@ static void NODEJS_pack(int32_t val, int size, int *map, char *output)
    Takes one or more arguments and packs them into a binary string according to the format argument 
  * If the first ARG is a Buffer(), is that as the output instead of creating its own buffer.
  */
-Handle<Value> pack(const Arguments& argv)
+static Handle<Value> pack(const Arguments& argv)
 {
     HandleScope scope;
 	int     outputpos = 0, outputsize = 0;
 	int     num_args, i;
-	int     currentarg;
+	int     currentarg = 0;
 	char    *output = NULL;
 	char    formatcodes[MAX_FORMAT_CODES];				// Local stored codes for faster access/ avoid mallocs
 	int     formatargs[MAX_FORMAT_CODES];				// Local index store.
@@ -192,13 +204,13 @@ Handle<Value> pack(const Arguments& argv)
 	//formatcodes = (char*)safe_emalloc(formatlen, sizeof(*formatcodes), 0);
 	//formatargs = (int*)safe_emalloc(formatlen, sizeof(*formatargs), 0);
     
-    if( debug_mode>0 ) printf("starting.. numargs=%d, formatlen=%d\n", num_args, formatlen);
+    if( IsDebug()>0 ) printf("starting.. numargs=%d, formatlen=%d\n", num_args, formatlen);
 	/* Preprocess format into formatcodes and formatargs */
 	for (i = 0; i < formatlen; formatcount++) {
 		char code = format[i++];
 		int arg = 1;
 		
-	    if( debug_mode>0 ) printf("starting..format args  currentarg=%d \n", currentarg );
+	    if( IsDebug()>0 ) printf("starting..format args  currentarg=%d \n", currentarg );
 
 		/* Handle format arguments if any */
 		if (i < formatlen) {
@@ -219,7 +231,7 @@ Handle<Value> pack(const Arguments& argv)
 
 		
 		
-		if( debug_mode>0 ) printf("starting..format codes  currentargs=%d\n", currentarg );
+		if( IsDebug()>0 ) printf("starting..format codes  currentargs=%d\n", currentarg );
 
 		/* Handle special arg '*' for all codes and check argv overflows */
 		switch ((int) code) {
@@ -594,7 +606,7 @@ static long NODEJS_unpack(char *data, int size, int issigned, int *map)
 /* {{{ proto array unpack(String format, Buffer input)
    Unpack binary string into named array elements according to format argument */
 
-Handle<Value> unpack(const Arguments& argv)
+static Handle<Value> unpack(const Arguments& argv)
 {
     HandleScope scope;
     const char  *format;
@@ -972,27 +984,43 @@ Handle<Value> unpack(const Arguments& argv)
 /* }}} */
 
 
-Handle<Value> setdebug( const Arguments& argv )
+static Handle<Value> setdebug( const Arguments& argv )
 {
 	HandleScope scope;
 	if( argv[0]->IsInt32() )
 	{
 		Local<Object> var = argv[0]->ToObject();
-		debug_mode = var->Int32Value();
+		SetDebug( var->Int32Value() );
 	}
 	return scope.Close( True() );
 }
 
 
-/* {{{ NODEJS_MINIT_FUNCTION
- */
-void initpack(Handle<Object> target)
+static Handle<Value> debug( void )
 {
 	HandleScope scope;
+	return scope.Close( IsDebug() ? True() : False() );
+}
+
+
+/* {{{ NODEJS_MINIT_FUNCTION
+ */
+static void Initialize(Handle<Object> target)
+{
+	HandleScope scope;
+	
+	Local<FunctionTemplate> t = FunctionTemplate::New(New);
+	t->InstanceTemplate()->SetInternalFieldCount(1);
+
+	target->Set(String::NewSymbol("HiPack"), t->GetFunction());
+	
+	//NODE_SET_PROTOTYPE_METHOD(t, "pack", pack);
 	NODE_SET_METHOD(target, "pack", pack);
 	NODE_SET_METHOD(target, "unpack", unpack);
 	NODE_SET_METHOD(target, "setdebug", setdebug);
+	//NODE_SET_METHOD(target, "debug", debug);
 	
+	SetDebug(0);
 	int machine_endian_check = 1;
 	int i;
 
@@ -1060,16 +1088,15 @@ void initpack(Handle<Object> target)
 }
 /* }}} */
 
+};
 
-extern "C" {
-    static void init (Handle<Object> target) 
-    {
-      HandleScope scope;
-      initpack(target);
-    }
-    
-    NODE_MODULE(pack, init);
+extern "C" void init (Handle<Object> target) 
+{
+  HandleScope scope;
+  HiPack::Initialize(target);
 }
+    
+NODE_MODULE(hipack, init);
 
 /*
  * Local variables:

@@ -1,7 +1,14 @@
 /*
- * The c++-module.
+ * The hipack module loader
  */
-var binding = require('../build/default/pack');
+var binding;
+
+try {
+    binding = require('./build/Release/hipack');
+} catch (e) {
+    console.error('hipack.node seems to not have been built. Run npm install.');
+    throw e;
+}
 
 
 /* pack() idea stolen from Perl (implemented formats behave the same as there)
@@ -10,22 +17,26 @@ var binding = require('../build/default/pack');
 exports.pack = binding.pack;
 
 function call_pack() {
-  var arglist;
-  for( var i = 0; i < arguments.length; i++ ) {
-    console.log( "arg #%d, is %s of %s", i, typeof(arguments[i]), arguments[i] );
-    if( arglist ) { arglist += ','; }
-    arglist += arguments[i];
+  if( binding.debug )
+  {
+	  var arglist;
+	  for( var i = 0; i < arguments.length; i++ ) {
+		console.log( "hipack/arg #%d, is %s of %s", i, typeof(arguments[i]), arguments[i] );
+		if( arglist ) { arglist += ','; }
+		arglist += arguments[i];
+	  }
   }
   
   if( typeof( arguments[1] ) == 'object' )
   {
-    console.log( "calling with 2 args" );
     return binding.pack( arguments[0], arguments[1] );
   }
   
-  var arg = arguments[0];   
-  delete arguments[0];                                                             
-  console.log( "calling with %s %s", arg, arguments );
+  var arg = arguments[0];
+  if( binding.debug )
+  {
+	console.log( "hipack/calling with %s %s", arg, arguments );
+  }
   return binding.pack( arg, arguments );
 };
 
