@@ -15,9 +15,9 @@ try {
  * Implemented formats are A, a, h, H, c, C, s, S, i, I, l, L, n, N, f, d, x, X, @.
  */
 exports.pack = binding.pack;
+exports.pack_debug = pack_debug;
 
-function call_pack() {
-  if( binding.debug )
+function pack_debug() {
   {
 	  var arglist;
 	  for( var i = 0; i < arguments.length; i++ ) {
@@ -33,7 +33,6 @@ function call_pack() {
   }
   
   var arg = arguments[0];
-  if( binding.debug )
   {
 	console.log( "hipack/calling with %s %s", arg, arguments );
   }

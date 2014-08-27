@@ -143,7 +143,7 @@ static void NODEJS_pack(int32_t val, int size, int *map, char *output)
 // We also store the output locally in the stack if its under 256 bytes in size, else we malloc it.
 
 /* pack() idea stolen from Perl (implemented formats behave the same as there)
- * Implemented formats are A, a, h, H, c, C, s, S, i, I, l, L, n, N, f, d, x, X, @.
+ * Implemented formats are A, a, h, H, c, C, s, S, i, I, l, L, n, N, f, d, x, X, V, v, @.
  */
 /* {{{ proto string pack(String format, mixed arg1 [, mixed arg2 [, mixed ...]])
    Takes one or more arguments and packs them into a binary string according to the format argument 
@@ -154,14 +154,16 @@ static Handle<Value> pack(const Arguments& argv)
     HandleScope scope;
 	int     outputpos = 0, outputsize = 0;
 	int     num_args, i;
-	int     currentarg = 0;
+	int     currentarg = 0, firstarg = 0;
 	char    *output = NULL;
 	char    formatcodes[MAX_FORMAT_CODES];				// Local stored codes for faster access/ avoid mallocs
 	int     formatargs[MAX_FORMAT_CODES];				// Local index store.
 	int     formatcount = 0;
 	int     formatlen;
 	const char *format;
-	node::Buffer *parentBuffer = NULL;
+	bool argsFromArray = false;
+	bool parentBuffer = false;
+	Local<Object>	outputBuffer;
 	char localOutput[256];
   
     num_args = argv.Length();
@@ -171,20 +173,22 @@ static Handle<Value> pack(const Arguments& argv)
 	
 	if (argv.Length() >= 1 ) 
 	{
-		currentarg = 1;
-		if (argv[0]->IsObject() ) {
-			printf("Using passed in buffer as the output\n");
-			//parentBuffer = Buffer::New( argv[0] );
-			currentarg = 2;
-			if (!argv[1]->IsString()) {
-				NODEJS_ERROR( "First argument must be a string, type of arg is %d", argv[0]->IsString() );
+		currentarg = 0;
+		if (argv[currentarg]->IsObject() ) 
+		{
+			if( IsDebug() ) printf("Using passed in buffer as the output\n");
+			outputBuffer = ( argv[currentarg]->ToObject() );
+			parentBuffer = true;
+			currentarg = 1;
+			if (!argv[currentarg]->IsString()) {
+				NODEJS_ERROR( "Second argument must be a string or buffer, type of arg is %d", argv[currentarg]->IsString() );
 			}
 		} else
-		if (!argv[0]->IsString()) {
-			NODEJS_ERROR( "First argument must be a string, type of arg is %d", argv[0]->IsString() );
+		if (!argv[currentarg]->IsString()) {
+			NODEJS_ERROR( "First argument must be a string or buffer, type of arg is %d", argv[currentarg]->IsString() );
 		}
 	}
-	
+
     //printf( "arg1 is : %s", *args[1] );
     //Handle<Object> arg2 = args[1]->ToObject();
     //Array<Object> array = args[1]->ToObject()->
@@ -194,9 +198,7 @@ static Handle<Value> pack(const Arguments& argv)
     //    argv[i+1] = arg2->Get(i);
     // }
 
-    
-    
-	String::Utf8Value	formatString( argv[0] );
+    String::Utf8Value	formatString( argv[currentarg] );
 	formatlen = formatString.length();
 	format = ToCString( formatString );
     
@@ -205,6 +207,25 @@ static Handle<Value> pack(const Arguments& argv)
 	//formatargs = (int*)safe_emalloc(formatlen, sizeof(*formatargs), 0);
     
     if( IsDebug()>0 ) printf("starting.. numargs=%d, formatlen=%d\n", num_args, formatlen);
+	
+	currentarg++;
+	firstarg = currentarg;
+	
+	Local<Array> args;
+	if( argv[currentarg]->IsArray() == true )
+	{
+		args = Array::Cast(*argv[currentarg]);
+		printf("Args size is %d\n", args->Length() );
+		num_args = args->Length();
+		currentarg = firstarg = 0;
+		//for( i=0;i<num_args;i++){
+		//	printf("value at #%d is %d\n", i, args->Get(i)->Int32Value() );
+		//}
+		argsFromArray = true;
+	}
+#define GETARG(n)	(argsFromArray ? args->Get(n) : argv[n])
+	
+	
 	/* Preprocess format into formatcodes and formatargs */
 	for (i = 0; i < formatlen; formatcount++) {
 		char code = format[i++];
@@ -228,8 +249,6 @@ static Handle<Value> pack(const Arguments& argv)
 				}
 			}
 		}
-
-		
 		
 		if( IsDebug()>0 ) printf("starting..format codes  currentargs=%d\n", currentarg );
 
@@ -248,6 +267,7 @@ static Handle<Value> pack(const Arguments& argv)
 			/* Always uses one arg */
 			case 'a': 
 			case 'A': 
+			case 'Z': 
 			case 'h': 
 			case 'H':
 				if (currentarg >= num_args) {
@@ -256,8 +276,11 @@ static Handle<Value> pack(const Arguments& argv)
 				}
 
 				if (arg < 0) {
-					Local<String> currstr = argv[currentarg]->ToString();
+					Local<String> currstr = GETARG(currentarg)->ToString();
 					arg = currstr->Length();
+					if( code == 'Z' ) {
+						arg++;
+					}
 				}
 				currentarg++;
 				break;
@@ -280,7 +303,7 @@ static Handle<Value> pack(const Arguments& argv)
 				if (arg < 0) {
 					arg = num_args - currentarg;
 				}
-
+				//printf("currentarg=%d, arg=%d, code=%c\n", currentarg, arg, code );
 				currentarg += arg;
 
 				if (currentarg > num_args) {
@@ -315,6 +338,7 @@ static Handle<Value> pack(const Arguments& argv)
 
 			case 'a': 
 			case 'A':
+			case 'Z':
 			case 'c': 
 			case 'C':
 			case 'x':
@@ -370,16 +394,16 @@ static Handle<Value> pack(const Arguments& argv)
 	
 	if( parentBuffer ) 
 	{
-		output = BufferData( parentBuffer );
+		output = BufferData( outputBuffer );
 	} else
 	if( outputsize > 255 ) {
 		output = (char*)malloc(outputsize + 1);
 	} else {
-		output = localOutput;
+		output = localOutput;			// Use local storage
 	}
 	
 	outputpos = 0;
-	currentarg = 1;
+	currentarg = firstarg; 
 
 	Local<Value>            val;
 	Local<String>           strval;
@@ -392,10 +416,14 @@ static Handle<Value> pack(const Arguments& argv)
 		switch ((int) code) {
 			case 'a': 
 			case 'A': 
+			case 'Z': 
                 {
-                    memset(&output[outputpos], (code == 'a') ? '\0' : ' ', arg);
-                    String::Utf8Value utf( argv[currentarg++]->ToString() );
-                    memcpy(&output[outputpos], *utf, (utf.length() < arg) ? utf.length() : arg);
+					int arg_cp = (code != 'Z') ? arg : MAX(0, arg - 1);
+                    memset(&output[outputpos], (code == 'a' || code == 'Z') ? '\0' : ' ', arg);
+                    //String::Utf8Value utf( argv[currentarg++]->ToString() );
+                    String::Utf8Value utf( GETARG(currentarg)->ToString() );
+					currentarg++;
+                    memcpy(&output[outputpos], *utf, (utf.length() < arg_cp) ? utf.length() : arg_cp);
                     outputpos += arg;
                 }
 				break;
@@ -405,7 +433,8 @@ static Handle<Value> pack(const Arguments& argv)
 				int nibbleshift = (code == 'h') ? 0 : 4;
 				int first = 1;
 
-                String::Utf8Value utf( argv[currentarg++]->ToString() );
+                String::Utf8Value utf( GETARG(currentarg)->ToString() );
+				currentarg++;
 				
 				if(arg > utf.length() ) {
 					NODEJS_ERROR( "Type %c: not enough characters in string", code );
@@ -446,7 +475,8 @@ static Handle<Value> pack(const Arguments& argv)
 			case 'c': 
 			case 'C':
 				while (arg-- > 0) {
-					val = argv[currentarg++];
+					val = GETARG(currentarg);
+					currentarg++;
 					NODEJS_pack( (int)val->Int32Value(), 1, byte_map, &output[outputpos]);
 					outputpos++;
 				}
@@ -465,7 +495,8 @@ static Handle<Value> pack(const Arguments& argv)
 				}
 
 				while (arg-- > 0) {
-					val = argv[currentarg++];
+					val = GETARG(currentarg);
+					currentarg++;
 					NODEJS_pack(val->Int32Value(), 2, map, &output[outputpos]);
 					outputpos += 2;
 				}
@@ -475,7 +506,8 @@ static Handle<Value> pack(const Arguments& argv)
 			case 'i': 
 			case 'I': 
 				while (arg-- > 0) {
-					val = argv[currentarg++];
+					val = GETARG(currentarg);
+					currentarg++;
 					NODEJS_pack(val->Int32Value(), sizeof(int), int_map, &output[outputpos]);
 					outputpos += sizeof(int);
 				}
@@ -494,7 +526,8 @@ static Handle<Value> pack(const Arguments& argv)
 				}
 
 				while (arg-- > 0) {
-					val = argv[currentarg++];
+					val = GETARG(currentarg);
+					currentarg++;
 					NODEJS_pack(val->Int32Value(), 4, map, &output[outputpos]);
 					outputpos += 4;
 				}
@@ -505,7 +538,8 @@ static Handle<Value> pack(const Arguments& argv)
 				float v;
 
 				while (arg-- > 0) {
-					val = argv[currentarg++];
+					val = GETARG(currentarg);
+					currentarg++;
 					v = ToFloat( val );
 					memcpy(&output[outputpos], &v, sizeof(v));
 					outputpos += sizeof(v);
@@ -517,7 +551,8 @@ static Handle<Value> pack(const Arguments& argv)
 				double v;
 
 				while (arg-- > 0) {
-					val = argv[currentarg++];
+					val = GETARG(currentarg);
+					currentarg++;
 					v = ToDouble( val );
 					memcpy(&output[outputpos], &v, sizeof(v));
 					outputpos += sizeof(v);
@@ -550,8 +585,8 @@ static Handle<Value> pack(const Arguments& argv)
 	output[outputpos] = '\0';
 	
 	//return Undefined();
-	if( parentBuffer != NULL) {
-		return scope.Close( parentBuffer->handle_ );
+	if( parentBuffer ) {
+		return scope.Close( outputBuffer );
 	}
 	
 	Local<Buffer> return_buffer = Buffer::New( output, outputpos );
@@ -601,7 +636,7 @@ static long NODEJS_unpack(char *data, int size, int issigned, int *map)
  * chars1, chars2, and ints.
  * Numeric pack types will return numbers, a and A will return strings,
  * f and d will return doubles.
- * Implemented formats are A, a, h, H, c, C, s, S, i, I, l, L, n, N, f, d, x, X, @.
+ * Implemented formats are Z, A, a, h, H, c, C, s, S, i, I, l, L, n, N, f, d, x, X, @.
  */
 /* {{{ proto array unpack(String format, Buffer input)
    Unpack binary string into named array elements according to format argument */
@@ -677,6 +712,10 @@ static Handle<Value> unpack(const Arguments& argv)
 			if (namelen > 200)
 				namelen = 200;
 			name = String::New( format+formatidx-namelen, namelen );
+		} else {
+			char temp[8]; sprintf( temp, "%d", arg );
+			namelen = strlen(temp);
+			name = String::New( temp, namelen );
 		}
 
 		switch ((int) type) {
@@ -691,6 +730,7 @@ static Handle<Value> unpack(const Arguments& argv)
 
 			case 'a': 
 			case 'A':
+			case 'Z':
 				size = arg;
 				arg = 1;
 				break;
@@ -787,7 +827,29 @@ static Handle<Value> unpack(const Arguments& argv)
 						return_value->Set( String::New(n), String::New( &input[inputpos], len + 1 ) );
 						break;
 					}
-					
+					case 'Z': {
+					  /* Z will strip everything after the first null character */
+					  char pad = '\0';
+					  int      s,
+							   len = inputlen - inputpos;     /* Remaining string */
+
+					  /* If size was given take minimum of len and size */
+					  if ((size >= 0) && (len > size)) {
+							  len = size;
+					  }
+
+					  size = len;
+
+					  /* Remove everything after the first null */
+					  for (s=0 ; s < len ; s++) {
+							  if (input[inputpos + s] == pad)
+									  break;
+					  }
+					  len = s;
+
+					  return_value->Set( String::New(n), String::New( &input[inputpos], len ) );
+					  break;
+                                  }					
 					case 'h': 
 					case 'H': {
 						int len = (inputlen - inputpos) * 2;	/* Remaining */
