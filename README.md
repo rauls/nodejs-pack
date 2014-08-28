@@ -34,12 +34,12 @@ To use in code,
 
 ## Original Pack Documentation 
 
-pack - Pack data into binary string
+pack - Pack data into binary Buffer object
 
 ### Description 
 
-Buffer pack ( string format [, mixed $args [, mixed n... ]] )
-Pack given arguments into a binary string according to format.
+Buffer object = pack ( [ DestBuffer ] , string format [, mixed $args [, mixed n... ]] )
+Pack given arguments into a binary Buffer according to format.
 
 The idea for this function was taken from Perl and all formatting codes work the same as in Perl. However, there are some formatting codes that are missing such as Perl's "u" format code.
 
