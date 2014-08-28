@@ -1,4 +1,5 @@
 ## HiPack
+
 This is a copy of PHP's pack/unpack function made into a nodejs module.
 Its a 100% clone with an additional options.
 
@@ -33,9 +34,9 @@ To use in code,
 
 ## Original Pack Documentation 
 
-pack — Pack data into binary string
+pack - Pack data into binary string
 
-### Description ¶
+### Description 
 
 Buffer pack ( string format [, mixed $args [, mixed n... ]] )
 Pack given arguments into a binary string according to format.
@@ -44,50 +45,50 @@ The idea for this function was taken from Perl and all formatting codes work the
 
 Note that the distinction between signed and unsigned values only affects the function unpack(), where as function pack() gives the same result for signed and unsigned format codes.
 
-### Parameters ¶
+### Parameters 
 
 ## format
 The format string consists of format codes followed by an optional repeater argument. The repeater argument can be either an integer value or * for repeating to the end of the input data. For a, A, h, H the repeat count specifies how many characters of one data argument are taken, for @ it is the absolute position where to put the next data, for everything else the repeat count specifies how many data arguments are consumed and packed into the resulting binary string.
 
-Currently implemented formats are:
+## Currently implemented formats are:
 
-pack() format characters
-Code	Description
-a	NUL-padded string
-A	SPACE-padded string
-h	Hex string, low nibble first
-H	Hex string, high nibble first
-c	signed char
-C	unsigned char
-s	signed short (always 16 bit, machine byte order)
-S	unsigned short (always 16 bit, machine byte order)
-n	unsigned short (always 16 bit, big endian byte order)
-v	unsigned short (always 16 bit, little endian byte order)
-i	signed integer (machine dependent size and byte order)
-I	unsigned integer (machine dependent size and byte order)
-l	signed long (always 32 bit, machine byte order)
-L	unsigned long (always 32 bit, machine byte order)
-N	unsigned long (always 32 bit, big endian byte order)
-V	unsigned long (always 32 bit, little endian byte order)
-f	float (machine dependent size and representation)
-d	double (machine dependent size and representation)
-x	NUL byte
-X	Back up one byte
-Z	NUL-padded string (new in PHP 5.5)
-@	NUL-fill to absolute position
-args
+### pack() format characters
 
-## Return Values ¶
+Code | Description
+a | 	NUL-padded string
+A | 	SPACE-padded string
+h | 	Hex string, low nibble first
+H | 	Hex string, high nibble first
+c | 	signed char
+C | 	unsigned char
+s | 	signed short (always 16 bit, machine byte order)
+S | 	unsigned short (always 16 bit, machine byte order)
+n | 	unsigned short (always 16 bit, big endian byte order)
+v | 	unsigned short (always 16 bit, little endian byte order)
+i | 	signed integer (machine dependent size and byte order)
+I | 	unsigned integer (machine dependent size and byte order)
+l | 	signed long (always 32 bit, machine byte order)
+L | 	unsigned long (always 32 bit, machine byte order)
+N | 	unsigned long (always 32 bit, big endian byte order)
+V | 	unsigned long (always 32 bit, little endian byte order)
+f | 	float (machine dependent size and representation)
+d | 	double (machine dependent size and representation)
+x | 	NUL byte
+X | 	Back up one byte
+Z | 	NUL-padded string (new in PHP 5.5)
+@ | 	NUL-fill to absolute position
+
+## Return Values
 
 Returns a Buffer containing data.
 
 
 
-unpack
+# unpack
 
-unpack — Unpack data from a Buffer
+## unpack - Unpack data from a Buffer
 
-## Description ¶
+### Description
 
 Object unpack ( String format , Buffer data, [ Boolean PerlFormat ] )
 Unpacks from a binary string into an array according to the given format.
