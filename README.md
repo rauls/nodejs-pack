@@ -55,6 +55,7 @@ The format string consists of format codes followed by an optional repeater argu
 ### pack() format characters
 
 Code | Description
+-----|------------
 a | 	NUL-padded string
 A | 	SPACE-padded string
 h | 	Hex string, low nibble first
@@ -98,7 +99,7 @@ The unpacked data is stored in an associative array. To accomplish this you have
 Example: "c2chars/nints" will return an object with fields
 Object = { chars1: 0, chars2: 0, ints: 0 }.
 
-## Parameters ¶
+## Parameters 
 
 format
 See pack() for an explanation of the format codes.
@@ -112,6 +113,6 @@ If this parameter exists and is true, we will ignore the PHP style names, and us
 Example: "c2n" will return an object with fields
 Object = { 1: 0, 2: 0, 3: 0 }
 
-## Return Values ¶
+## Return Values
 
 Returns an associative array containing unpacked elements of binary string.
