@@ -1,7 +1,7 @@
 {
   "name": "hipack",
   "description": "HiSpeed Pack/Unpack of bytes formats, just like PHP and PERL",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "type": "git",
     "url": "git://github.com/rauls/nodejs-pack.git"

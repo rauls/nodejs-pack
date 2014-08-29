@@ -1,8 +1,34 @@
 HiPack
-This is a copy of PHP's pack function made into a nodejs module.
-Its a 100% clone with no new features or changed features, yet.
 
-The only speed issue is that doing a Buffer::New() takes a long time.
+This is a copy of PHP's pack/unpack function made into a nodejs module.
+Its a 100% clone with an additional options.
 
-A new feature where we can populate an existing Buffer is now there, so the caller can
-worry about Buffer management. This will be done as the first paramater.
+* A new feature where we can populate an existing Buffer is now there, so
+* the caller can
+worry about Buffer management. Simply make the first parameter a buffer
+
+* Also we can supply an array of values, rather than arguments, so the 2nd
+* parameter is an array.
+ie. pack( "VV", [ 23,55 ] );
+
+* Added a Perl style format that was missing, which is format character "V"
+* and "v"
+
+
+
+## Install
+
+To install HiPack, use [npm](http://github.com/rauls/nodejs-pack)
+
+    $ npm install hipack
+
+## Packing Bytes Test
+    
+To test packing bytes, run
+	 $ node test/test.js
+    $ node test/speedtest.js
+    $ node example/packit.js CCCC 25 26 27 27
+    
+To use in code,
+	var pack = require( 'hipack' ).pack;
+	var buffer = pack( "CCCV", [ 1,2,3, 12345679 ] );
