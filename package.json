@@ -1,15 +1,20 @@
 {
   "name": "hipack",
-  "description": "HiSpeed Pack/Unpack of bytes, just like PHP",
-  "version": "0.1.0",
+  "description": "HiSpeed Pack/Unpack of bytes formats, just like PHP and PERL",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rauls/nodejs-pack.git"
+  },
+
   "homepage": "http://github.com/rauls/nodejs-pack",
   "author": "Raul Sobon <raul.sobon@gmail.com>",
-  "main": "hipack.js",
+  "main": "./build/Release/hipack",
   "directories": {
     "lib": "."
   },
   "scripts": {
-    "preinstall": "make || gmake",
+    "_preinstall": "make || gmake",
     "test": "node test/test.js"
   },
   "engines": {

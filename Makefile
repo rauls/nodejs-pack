@@ -16,13 +16,13 @@ lint:
 temp:
 	rm -rf tmp/hipack
 	mkdir -p tmp/hipack
-	cp -r README *.{cc,h,js*} wscript Makefile deps test tmp/hipack
-	cd tmp/hipack && rm -rf deps/*/.git* deps/*/*.o deps/hipack/libhipack.*
+	cp -r README *.{cc,h,js*} binding.gyp Makefile test tmp/hipack
+	cd tmp/hipack
 
 test:
 	node test/test.js
 	
-install: lint
+install:
 	@npm install
 
 package: temp install
