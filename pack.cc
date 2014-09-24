@@ -215,7 +215,7 @@ static Handle<Value> pack(const Arguments& argv)
 	if( argv[currentarg]->IsArray() == true )
 	{
 		args = Array::Cast(*argv[currentarg]);
-		printf("Args size is %d\n", args->Length() );
+		if(IsDebug()) printf("Args size is %d\n", args->Length() );
 		num_args = args->Length();
 		currentarg = firstarg = 0;
 		//for( i=0;i<num_args;i++){
