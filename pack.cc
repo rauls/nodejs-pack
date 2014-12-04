@@ -982,7 +982,7 @@ static Handle<Value> unpack(const Arguments& argv)
 
 						memcpy(&v, &input[inputpos], sizeof(float));
 						//add_assoc_double(return_value, n, (double)v);
-						return_value->Set( String::New(n), Integer::New(v) );
+						return_value->Set( String::New(n), Number::New(v) );
 						break;
 					}
 
@@ -991,7 +991,7 @@ static Handle<Value> unpack(const Arguments& argv)
 
 						memcpy(&v, &input[inputpos], sizeof(double));
 						//add_assoc_double(return_value, n, v);
-						return_value->Set( String::New(n), Integer::New(v) );
+						return_value->Set( String::New(n), Number::New(v) );
 						break;
 					}
 
