@@ -31,7 +31,7 @@ function SimpleTest()
   console.dir( (buf) );
 
   console.log("\nSimple Text Sample : Converting Array of 3 VARs \nCalling pack.pack( 'VVC', [65,66,67] )" );
-  var buf = pack.pack( "VVC", [ 65,66,67 ] );
+  buf = pack.pack( "VVC", [ 65,66,67 ] );
   console.log( "Result Buffer : " );
   console.dir( (buf) );
 	
